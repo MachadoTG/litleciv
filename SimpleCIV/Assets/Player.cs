@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 public class Player
@@ -13,6 +14,11 @@ public class Player
     public int farms;
     public int villages;
     public int castles;
+
+    public int farmsUsed;
+    public int villagesUsed;
+    public int castlesUsed;
+
 
     public List<AdvancedTile> tilesOwned;
 
@@ -29,7 +35,10 @@ public class Player
     public void DoIncome()
     {
         income = 0;
-        tilesOwned.ForEach(t => income += t.income);
+        tilesOwned.ForEach(t => {
+            income += t.build.GetIncome();
+            income -= t.build.GetUpkeep();
+        });
     }
     public void AddAdvancedTile(AdvancedTile t)
     {
@@ -40,5 +49,10 @@ public class Player
     {
         tilesOwned.Remove(t);
         DoIncome();
+    }
+    internal void NexTurn()
+    {
+        DoIncome();
+        money += income;
     }
 }

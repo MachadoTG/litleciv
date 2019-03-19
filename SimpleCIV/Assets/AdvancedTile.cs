@@ -3,20 +3,23 @@ using UnityEngine.UI;
 
 public class AdvancedTile : MonoBehaviour
 {
-    public bool empty;
-    public int defenseLevel;
-    public int income;
+    public Buildables build;
+    public int targetWidht = 80;
+    public int targetHeight = 80;
+    private SpriteRenderer img;
 
-    private Image img;
-
-    public Player owner;
+    public Player owner = null;
 
 
     private void Awake()
     {
-        GetComponentInChildren<Canvas>().worldCamera = Camera.main;
-        img = GetComponentInChildren<Image>();
-        income = 1;
+        img = GetComponentInChildren<SpriteRenderer>();
+        build = new Buildables.Empty();
+    }
+
+    private void Update()
+    {
+        
     }
 
     public void ChangeIcon(Sprite s)
@@ -29,10 +32,33 @@ public class AdvancedTile : MonoBehaviour
         }
         else
         {
+            Color c = img.color;
+            c.a = 1;
+            img.color = c;
             img.sprite = s;
+        }
+    }
+    public Sprite GetSprite() { return img.sprite; }
+    public void MovingUnit(bool b)
+    {
+        if (b)
+        {
+            Color c = img.color;
+            c.a = 0;
+            img.color = c;
+        }
+        else
+        {
             Color c = img.color;
             c.a = 1;
             img.color = c;
         }
+    }
+    public void UnitMoved()
+    {
+        build = new Buildables.Empty();
+        Color c = img.color;
+        c.a = 0;
+        img.color = c;
     }
 }
