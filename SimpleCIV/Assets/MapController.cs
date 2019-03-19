@@ -7,6 +7,9 @@ public class MapController : MonoBehaviour
 {
     private Tilemap map;
 
+    public Sprite[] sprites;
+    private int spriteIndex = 0;
+
     public List<Player> players;
     private Player playing;
 
@@ -14,7 +17,11 @@ public class MapController : MonoBehaviour
     private TileBase selectedTile;
     private AdvancedTile selectedInfo;
 
+    public GameObject mainTile;
     private Dictionary<Vector3, AdvancedTile> advancedTiles;
+
+    private Vector3Int coordinate;
+    private List<Vector3> availablePlaces;
 
     private int Index = 0;
 
@@ -26,9 +33,16 @@ public class MapController : MonoBehaviour
 
         LinkCellToInfo();
 
-        players.Add(new Player("BLUE", Color.blue));
-        players.Add(new Player("RED", Color.red));
+        players.Add(new Player("BLUE", 100, Color.blue));
+        players.Add(new Player("RED", 100, Color.red));
 
+        foreach (Player p in players)
+        {
+            Vector3Int v = ToVectorInt(availablePlaces[Random.Range(0, availablePlaces.Count)]);
+            map.SetTileFlags(v, TileFlags.None);
+            map.SetColor(v, p.color);
+            advancedTiles[v].owner = p;
+        }
         playing = players[0];
     }
 
@@ -37,12 +51,24 @@ public class MapController : MonoBehaviour
     {
         if (Input.GetMouseButtonDown(0))
         {
-            SelectTile();
+            FindClickedTile();
         }
         if (Input.GetKeyDown(KeyCode.Space))
         {
             NextPlayer();
         }
+        if (Input.GetKeyDown(KeyCode.Alpha1))
+            spriteIndex = 0;
+        if (Input.GetKeyDown(KeyCode.Alpha2))
+            spriteIndex = 1;
+        if (Input.GetKeyDown(KeyCode.Alpha3))
+            spriteIndex = 2;
+        if (Input.GetKeyDown(KeyCode.Alpha4))
+            spriteIndex = 3;
+        if (Input.GetKeyDown(KeyCode.Alpha5))
+            spriteIndex = 4;
+        if (Input.GetKeyDown(KeyCode.Alpha6))
+            spriteIndex = 5;
     }
 
     private void NextPlayer()
@@ -58,7 +84,7 @@ public class MapController : MonoBehaviour
     }
     private void LinkCellToInfo()
     {
-        List<Vector3> availablePlaces = new List<Vector3>();
+        availablePlaces = new List<Vector3>();
         for (int n = map.cellBounds.xMin; n < map.cellBounds.xMax; n++)
         {
             for (int p = map.cellBounds.yMin; p < map.cellBounds.yMax; p++)
@@ -73,8 +99,8 @@ public class MapController : MonoBehaviour
         }
         availablePlaces.ForEach(vec =>
         {
-            AdvancedTile tile = new AdvancedTile();
-            advancedTiles.Add(vec, tile);
+            GameObject tile = Instantiate(mainTile,map.CellToWorld(ToVectorInt(vec)),transform.rotation);
+            advancedTiles.Add(vec, tile.GetComponent<AdvancedTile>());
             Debug.Log(vec.x + "|" + vec.y);
         });
         map.SetColor(ToVectorInt(availablePlaces[0]),Color.blue);
@@ -84,20 +110,17 @@ public class MapController : MonoBehaviour
 
     
 
-    private void SelectTile()
+    private void FindClickedTile()
     {
         Vector3 mouseWorldPos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-        Vector3Int coordinate = map.WorldToCell(mouseWorldPos);
+        coordinate = map.WorldToCell(mouseWorldPos);
 
-        map.SetTileFlags(coordinate, TileFlags.None);
-
-        selectedTile = map.GetTile(coordinate);
-        advancedTiles.TryGetValue(coordinate, out selectedInfo);
-
-        if (map.GetColor(coordinate) != playing.color)
-            map.SetColor(coordinate, playing.color);
+        if (advancedTiles[coordinate].owner == playing)
+            advancedTiles[coordinate].ChangeIcon(sprites[spriteIndex]);
 
     }
+
+
 
     private Vector3Int ToVectorInt(Vector3 v)
     {
