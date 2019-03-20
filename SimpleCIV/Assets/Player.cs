@@ -40,6 +40,45 @@ public class Player
             income -= t.build.GetUpkeep();
         });
     }
+    public bool Build(Buildables b)
+    {
+        Debug.Log(b.GetType().Name);
+        if (b is Buildables.Farm)
+        {
+            farms += 1;
+            return true;
+        }
+        if (b is Buildables.Village)
+        {
+            villages += 1;
+            return true;
+        }
+        if (b is Buildables.Castle)
+        {
+            castles += 1;
+            return true;
+        }
+        if (b is Buildables.Peasant)
+            if (farmsUsed < farms)
+            {
+                farmsUsed += 1;
+                return true;
+            }
+        if (b is Buildables.Knight)
+            if (villagesUsed < villages)
+            {
+                villagesUsed += 1;
+                return true;
+            }
+        if (b is Buildables.Duke)
+            if (castlesUsed < castles)
+            {
+                castlesUsed += 1;
+                return true;
+            }
+        Debug.Log("false");
+        return false;
+    }
     public void AddAdvancedTile(AdvancedTile t)
     {
         tilesOwned.Add(t);

@@ -10,8 +10,7 @@ public class MapController : MonoBehaviour
 {
     private Tilemap map;
 
-    public Sprite[] sprites;
-    private int spriteIndex = 0;
+    public Warning warning;
 
     public PlayerInfo info;
 
@@ -53,6 +52,12 @@ public class MapController : MonoBehaviour
                 Vector3Int v = ToVectorInt(availablePlaces[Random.Range(0, availablePlaces.Count)]);
                 if (advancedTiles[v].owner == null)
                 {
+                    if (i > 0)
+                    {
+                        advancedTiles[v].build = new Buildables.Farm();
+                        advancedTiles[v].ChangeIcon(advancedTiles[v].build.GetSprite());
+                        p.Build(advancedTiles[v].build);
+                    }
                     map.SetTileFlags(v, TileFlags.None);
                     map.SetColor(v, p.color);
                     advancedTiles[v].owner = p;
@@ -75,13 +80,20 @@ public class MapController : MonoBehaviour
             info.ChangePlayer(playing);
         }
 
-        if (Input.GetMouseButtonDown(0))
+        if((Input.GetMouseButtonDown(0))&&(movingUnit || building))
         {
             FindClickedTile();
             if (building)
                 Build();
             if (movingUnit)
                 MoveUnit();
+        }
+        else
+        {
+            if (Input.GetMouseButtonDown(0))
+            {
+                FindClickedTile();
+            }
         }
 
         if (Input.GetMouseButtonDown(1))
@@ -112,34 +124,38 @@ public class MapController : MonoBehaviour
     {
         if(advancedTiles[coordinate].owner == playing && advancedTiles[coordinate].build is Buildables.Empty)
         {
+            Debug.Log("Moved");
             advancedTiles[coordinate].build = build.Clone();
-            advancedTiles[coordinate].ChangeIcon(mouse.sprite);
-            advancedTiles[coordinate].build.moved = true;
+            advancedTiles[coordinate].ChangeIcon(build.GetSprite());
+            advancedTiles[coordinate].build.moved = false;
             lastTile.UnitMoved();
             lastTile = null;
             mouse.gameObject.SetActive(false);
             movingUnit = false;
-        }
-        
-        if (advancedTiles[coordinate].owner != playing && IsAdjscente())
+            return;
+        }else
+        if (advancedTiles[coordinate].owner != playing
+            && advancedTiles[coordinate].build.GetDefenseLeve() < build.GetDefenseLeve())
         {
             playing.AddAdvancedTile(advancedTiles[coordinate]);
 
             if (advancedTiles[coordinate].owner != null)
                 advancedTiles[coordinate].owner.RemoveAdvancedTile(advancedTiles[coordinate]);
+            Debug.Log("Moved Agressive");
 
             map.SetTileFlags(ToVectorInt(coordinate), TileFlags.None);
             map.SetColor(ToVectorInt(coordinate), playing.color);
             advancedTiles[coordinate].owner = playing;
             advancedTiles[coordinate].build = build.Clone();
-            advancedTiles[coordinate].ChangeIcon(mouse.sprite);
+            advancedTiles[coordinate].ChangeIcon(build.GetSprite());
             advancedTiles[coordinate].build.moved = true;
             mouse.gameObject.SetActive(false);
             lastTile.UnitMoved();
             lastTile = null;
             movingUnit = false;
+            return;
         }
-        
+        warning.ShowMessage(3f, "Cant Move There!");
     }
     private bool IsAdjscente()
     {
@@ -284,15 +300,57 @@ public class MapController : MonoBehaviour
         if (!building)
             return;
         if (advancedTiles[coordinate].build.GetType() == typeof(Buildables.Empty) && advancedTiles[coordinate].owner == playing)
-            if (build.GetCost() <= playing.money)
+        {
+            if (build.GetCost() <= playing.money )
             {
-                playing.money -= build.GetCost();
-                advancedTiles[coordinate].build = build.Clone();
-                advancedTiles[coordinate].ChangeIcon(mouse.sprite);
-                mouse.gameObject.SetActive(false);
-                building = false;
+                if (playing.Build(build))
+                {
+                    Debug.Log("Build");
+                    playing.money -= build.GetCost();
+                    advancedTiles[coordinate].build = build.Clone();
+                    advancedTiles[coordinate].ChangeIcon(build.GetSprite());
+                    mouse.gameObject.SetActive(false);
+                    building = false;
+                    return;
+                }
+                warning.ShowMessage(3f, "Not enough Buildings");
+                return;
             }
+            warning.ShowMessage(3f, "Not enough Money");
+            return;
+        }
+        else
+        if(advancedTiles[coordinate].owner != playing && advancedTiles[coordinate].build.GetDefenseLeve()< build.GetDefenseLeve())
+        {
+            if (build.GetCost() <= playing.money )
+            {
+                if (playing.Build(build))
+                {
+                    Debug.Log("Build Agressive");
+                    playing.money -= build.GetCost();
+                    playing.AddAdvancedTile(advancedTiles[coordinate]);
 
+                    foreach (Player p in players)
+                    {
+                        if (p.tilesOwned.Contains(advancedTiles[coordinate]))
+                            p.tilesOwned.Remove(advancedTiles[coordinate]);
+                    }
+                    map.SetTileFlags(coordinate, TileFlags.None);
+                    map.SetColor(coordinate, playing.color);
+                    advancedTiles[coordinate].owner = playing;
+                    advancedTiles[coordinate].build = build.Clone();
+                    advancedTiles[coordinate].ChangeIcon(build.GetSprite());
+                    mouse.gameObject.SetActive(false);
+                    building = false;
+                    return;
+                }
+                warning.ShowMessage(3f, "Not enough Buildings");
+                return;
+            }
+            warning.ShowMessage(3f, "Not enough Money");
+            return;
+        }
+        warning.ShowMessage(3f, "Invalid Location");
     }
 
     private bool movingUnit = false;
@@ -304,10 +362,12 @@ public class MapController : MonoBehaviour
         Debug.Log(coordinate.x + "|" + coordinate.y + "|" + coordinate.z);
         if (advancedTiles[coordinate].owner == playing &&
             advancedTiles[coordinate].build.isMovable()
-            && !advancedTiles[coordinate].build.moved)
+            && !advancedTiles[coordinate].build.moved
+            && !movingUnit && !building)
         {
+            Debug.Log("Moving");
             mouse.gameObject.SetActive(true);
-            mouse.sprite = Array.Find(sprites,  s => { if (s.name == advancedTiles[coordinate].GetSprite().name) return s; return s; });
+            mouse.sprite = advancedTiles[coordinate].build.GetSprite();
             advancedTiles[coordinate].MovingUnit(true);
             build = advancedTiles[coordinate].build.Clone();
             movingUnit = true;
@@ -372,48 +432,48 @@ public class MapController : MonoBehaviour
     {
         if (!mouse.gameObject.activeSelf)
             mouse.gameObject.SetActive(true);
-        mouse.sprite = sprites[0];
         build = new Buildables.Peasant();
+        mouse.sprite = build.GetSprite();
         building = true;
     }
     public void ClickFarm()
     {
         if (!mouse.gameObject.activeSelf)
             mouse.gameObject.SetActive(true);
-        mouse.sprite = sprites[1];
         build = new Buildables.Farm();
+        mouse.sprite = build.GetSprite();
         building = true;
     }
     public void ClickKnight()
     {
         if (!mouse.gameObject.activeSelf)
             mouse.gameObject.SetActive(true);
-        mouse.sprite = sprites[2];
         build = new Buildables.Knight();
+        mouse.sprite = build.GetSprite();
         building = true;
     }
     public void ClickVillage()
     {
         if (!mouse.gameObject.activeSelf)
             mouse.gameObject.SetActive(true);
-        mouse.sprite = sprites[3];
         build = new Buildables.Village();
+        mouse.sprite = build.GetSprite();
         building = true;
     }
     public void ClickDuke()
     {
         if (!mouse.gameObject.activeSelf)
             mouse.gameObject.SetActive(true);
-        mouse.sprite = sprites[4];
         build = new Buildables.Duke();
+        mouse.sprite = build.GetSprite();
         building = true;
     }
     public void ClickCastle()
     {
         if (!mouse.gameObject.activeSelf)
             mouse.gameObject.SetActive(true);
-        mouse.sprite = sprites[5];
         build = new Buildables.Castle();
+        mouse.sprite = build.GetSprite();
         building = true;
     }
 

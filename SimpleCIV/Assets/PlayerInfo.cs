@@ -13,13 +13,24 @@ public class PlayerInfo : MonoBehaviour
     public Text villages;
     public Text castle;
 
+    public Player player;
+    private void Update()
+    {
+        UpdateInfo();
+    }
+    public void UpdateInfo()
+    {
+        pName.text = player.nome;
+        money.text = player.money.ToString();
+        income.text = player.income.ToString();
+        farms.text = "F:" + player.farmsUsed + "/" + player.farms;
+        villages.text = "V:" + player.villagesUsed + "/" + player.villages;
+        castle.text = "C:" + player.castlesUsed + "/" + player.castles;
+    }
+
     public void ChangePlayer(Player p)
     {
-        pName.text = p.nome;
-        money.text = p.money.ToString();
-        income.text = p.income.ToString();
-        farms.text = "F:" + p.farmsUsed + "/" + p.farms;
-        villages.text = "F:" + p.villagesUsed + "/" + p.villages;
-        castle.text = "F:" + p.castlesUsed + "/" + p.castles;
+        player = p;
+        UpdateInfo();
     }
 }
