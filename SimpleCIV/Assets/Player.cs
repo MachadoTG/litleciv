@@ -36,47 +36,87 @@ public class Player
     {
         income = 0;
         tilesOwned.ForEach(t => {
-            income += t.build.GetIncome();
-            income -= t.build.GetUpkeep();
+            income += t.GetBuildable().GetIncome();
+            income -= t.GetBuildable().GetUpkeep();
         });
     }
     public bool Build(Buildables b)
     {
-        Debug.Log(b.GetType().Name);
-        if (b is Buildables.Farm)
+        Debug.Log("BUILD" + b.GetType().Name);
+        if (b is Buildables.Farm && money >= b.GetCost())
         {
             farms += 1;
+            money -= b.GetCost();
+            return true;
+        }
+        if (b is Buildables.Village && money >= b.GetCost())
+        {
+            villages += 1;
+            money -= b.GetCost();
+            return true;
+        }
+        if (b is Buildables.Castle && money >= b.GetCost())
+        {
+            castles += 1;
+            money -= b.GetCost();
+            return true;
+        }
+        if (b is Buildables.Peasant && money >= b.GetCost())
+            if (farmsUsed < farms)
+            {
+                farmsUsed += 1;
+                money -= b.GetCost();
+                return true;
+            }
+        if (b is Buildables.Knight && money >= b.GetCost())
+            if (villagesUsed < villages)
+            {
+                villagesUsed += 1;
+                money -= b.GetCost();
+                return true;
+            }
+        if (b is Buildables.Duke)
+            if (castlesUsed < castles && money >= b.GetCost())
+            {
+                castlesUsed += 1;
+                money -= b.GetCost();
+                return true;
+            }
+        return false;
+    }
+    public bool RemoveBuild(Buildables b)
+    {
+        Debug.Log("BUILD" + b.GetType().Name);
+        if (b is Buildables.Farm)
+        {
+            farms -= 1;
             return true;
         }
         if (b is Buildables.Village)
         {
-            villages += 1;
+            villages -= 1;
             return true;
         }
         if (b is Buildables.Castle)
         {
-            castles += 1;
+            castles -= 1;
             return true;
         }
         if (b is Buildables.Peasant)
-            if (farmsUsed < farms)
-            {
-                farmsUsed += 1;
-                return true;
-            }
+        {
+            farmsUsed -= 1;
+            return true;
+        }
         if (b is Buildables.Knight)
-            if (villagesUsed < villages)
-            {
-                villagesUsed += 1;
-                return true;
-            }
+        {
+            villagesUsed -= 1;
+            return true;
+        }
         if (b is Buildables.Duke)
-            if (castlesUsed < castles)
-            {
-                castlesUsed += 1;
-                return true;
-            }
-        Debug.Log("false");
+        {
+            castlesUsed -= 1;
+            return true;
+        }
         return false;
     }
     public void AddAdvancedTile(AdvancedTile t)
@@ -87,11 +127,17 @@ public class Player
     public void RemoveAdvancedTile(AdvancedTile t)
     {
         tilesOwned.Remove(t);
+        RemoveBuild(t.GetBuildable());
         DoIncome();
     }
-    internal void NexTurn()
+    public void NexTurn()
     {
+        tilesOwned.ForEach(tile => { tile.GetBuildable().moved = false; Debug.Log(tile.GetBuildable().moved); });
         DoIncome();
         money += income;
+    }
+    public bool HasTile(AdvancedTile tile)
+    {
+        return tilesOwned.Contains(tile);
     }
 }

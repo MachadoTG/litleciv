@@ -64,7 +64,6 @@ public class Buildables
 
         public override Sprite GetSprite()
         {
-            Debug.Log(img.name);
             return img;
         }
 
@@ -111,7 +110,6 @@ public class Buildables
         public override bool isMovable() { return movable; }
         public override Sprite GetSprite()
         {
-            Debug.Log(img.name);
             return img;
         }
 
@@ -172,7 +170,7 @@ public class Buildables
     public class Castle: Buildables
     {
         public new static int cost = 200;
-        public new static int level = 5;
+        public new static int level = 4;
         public new static int upkeep = 100;
         public new static Sprite img = Resources.Load<Sprite>("Sprite/castle");
         public new static bool movable = false;

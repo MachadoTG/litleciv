@@ -1,28 +1,36 @@
 ﻿using UnityEngine;
+using UnityEngine.Tilemaps;
 using UnityEngine.UI;
 
 public class AdvancedTile : MonoBehaviour
 {
-    public Buildables build;
     public int targetWidht = 80;
     public int targetHeight = 80;
+
+    private Buildables build;
+    private Buildables temp;
+
     private SpriteRenderer img;
 
-    public Player owner = null;
+    private Player owner = null;
 
+    private Vector3Int tilePos;
+    private MapController map;
 
     private void Awake()
     {
         img = GetComponentInChildren<SpriteRenderer>();
+        map = GameObject.FindObjectOfType<MapController>();
         build = new Buildables.Empty();
     }
 
-    private void Update()
+    public void Build(Buildables b)
     {
-        
+        build = b.Clone();
+        build.moved = b.moved;
+        ChangeSprite(build.GetSprite());
     }
-
-    public void ChangeIcon(Sprite s)
+    public void ChangeSprite(Sprite s)
     {
         if (s == null)
         {
@@ -39,26 +47,37 @@ public class AdvancedTile : MonoBehaviour
         }
     }
     public Sprite GetSprite() { return img.sprite; }
-    public void MovingUnit(bool b)
+    public void UnitMoveTo(AdvancedTile t)
     {
-        if (b)
-        {
-            Color c = img.color;
-            c.a = 0;
-            img.color = c;
-        }
-        else
-        {
-            Color c = img.color;
-            c.a = 1;
-            img.color = c;
-        }
+        Debug.Log(owner.nome);
+        Debug.Log(t.owner.nome);
+        if (owner != t.owner)
+            t.ChangeOwner(owner);
+        t.Build(temp);
     }
-    public void UnitMoved()
+    public void UnitMoving()
     {
+        temp = build.Clone();
         build = new Buildables.Empty();
-        Color c = img.color;
-        c.a = 0;
-        img.color = c;
+        ChangeSprite(build.GetSprite());
     }
+    public void CancelUnitMove()
+    {
+        build = temp.Clone();
+    }
+    public void ChangeOwner(Player p)
+    {
+        if (owner != null)
+            if (owner.HasTile(this))
+                owner.RemoveAdvancedTile(this);
+        owner = p;
+        if (!owner.HasTile(this))
+            owner.AddAdvancedTile(this);
+
+
+        map.ChangeTileColor(tilePos, p.color);
+    }
+    public Player GetPlayer() { return owner; }
+    public Buildables GetBuildable() { return build; }
+    public void SetTilePos(Vector3Int t) { tilePos = t; }
 }
