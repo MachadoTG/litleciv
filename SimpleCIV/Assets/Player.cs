@@ -19,18 +19,21 @@ public class Player
     public int villagesUsed;
     public int castlesUsed;
 
-
     public List<AdvancedTile> tilesOwned;
 
-    public Player(string s, float f, Color c)
+    public AI myBrains;
+
+    public Player(string s, float f, Color c, bool AI)
     {
+        if (AI)
+        {
+            myBrains = new AI(GameObject.FindObjectOfType<MapController>(), this, 0);
+        }
         nome = s;
         color = c;
         money = f;
         tilesOwned = new List<AdvancedTile>();
     }
-
-    
 
     public void DoIncome()
     {
@@ -42,7 +45,6 @@ public class Player
     }
     public bool Build(Buildables b)
     {
-        Debug.Log("BUILD" + b.GetType().Name);
         if (b is Buildables.Farm && money >= b.GetCost())
         {
             farms += 1;
@@ -132,7 +134,9 @@ public class Player
     }
     public void NexTurn()
     {
-        tilesOwned.ForEach(tile => { tile.GetBuildable().moved = false; Debug.Log(tile.GetBuildable().moved); });
+        Debug.Log("TILES"+nome);
+        Debug.Log(tilesOwned.Count);
+        tilesOwned.ForEach(tile => { if(tile.GetBuildable().isMovable())tile.GetBuildable().moved = false;});
         DoIncome();
         money += income;
     }

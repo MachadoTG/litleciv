@@ -50,9 +50,11 @@ public class AdvancedTile : MonoBehaviour
     public void UnitMoveTo(AdvancedTile t)
     {
         Debug.Log(owner.nome);
-        Debug.Log(t.owner.nome);
+        if (t.owner != null)
+            Debug.Log(t.owner.nome);
         if (owner != t.owner)
             t.ChangeOwner(owner);
+        Debug.Log(temp.GetType());
         t.Build(temp);
     }
     public void UnitMoving()
@@ -73,8 +75,6 @@ public class AdvancedTile : MonoBehaviour
         owner = p;
         if (!owner.HasTile(this))
             owner.AddAdvancedTile(this);
-
-
         map.ChangeTileColor(tilePos, p.color);
     }
     public Player GetPlayer() { return owner; }

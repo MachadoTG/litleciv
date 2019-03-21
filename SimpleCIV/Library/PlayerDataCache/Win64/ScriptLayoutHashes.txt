@@ -1,6 +1,6 @@
 Win64
 PlayerPath?
-C:/Users/macha/Desktop/SimpleCIV/SimpleCIV.exe
+E:/gitKraken repo/simpleCIV/Game/SimpleCIV.exe
 SceneListBegin?
 Assets/Scenes/SampleScene.unity
 SceneListEnd?

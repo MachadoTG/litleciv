@@ -17,7 +17,7 @@ public class MapController : MonoBehaviour
     public SpriteRenderer mouse;
 
     public List<Player> players;
-    private Player playing;
+    public Player playing;
 
     private Vector3Int cellPosition;
     private TileBase selectedTile;
@@ -29,7 +29,7 @@ public class MapController : MonoBehaviour
     private Vector3Int coordinate;
     private List<Vector3> availablePlaces;
     
-    private int Index = 0;
+    private int Index = -1;
 
     private Buildables build;
 
@@ -41,23 +41,48 @@ public class MapController : MonoBehaviour
 
         LinkCellToInfo();
 
-        players.Add(new Player("BLUE", 30, Color.blue));
-        players.Add(new Player("RED", 30, Color.red));
-
+        players.Add(new Player("BLUE", 30, Color.blue,false));
+        players.Add(new Player("RED", 30, Color.red,true));
+        players.Add(new Player("CYAN", 30, Color.cyan,true));
+        players.Add(new Player("YELLOW", 30, Color.yellow,true));
+        players.Add(new Player("MAGENTA", 30, Color.magenta,true));
         foreach (Player p in players)
         {
-            Vector3Int v = ToVectorInt(availablePlaces[Random.Range(0, availablePlaces.Count)]);
+            Vector3Int v = ToVectorInt(availablePlaces[Random.Range(0, availablePlaces.Count-1)]);
             if (advancedTiles[v].GetPlayer() == null)
             {
                 advancedTiles[v].ChangeOwner(p);
                 advancedTiles[v].Build(new Buildables.Farm());
                 p.Build(new Buildables.Farm());
+                Debug.Log(v.x + "|" + v.y + "|" + v.z);
+                Debug.Log(advancedTiles[v].GetBuildable().GetType().Name);
+            }
+            if(p.myBrains != null)
+            {
+                v = ToVectorInt(availablePlaces[Random.Range(0, availablePlaces.Count-1)]);
+                while (p.tilesOwned.Count != 2) 
+                {
+                    v = ToVectorInt(availablePlaces[Random.Range(0, availablePlaces.Count - 1)]);
+                    if (advancedTiles[v].GetPlayer() == null)
+                    {
+                        if (IsAdjscente(v))
+                        {
+                            advancedTiles[v].ChangeOwner(p);
+                            advancedTiles[v].Build(new Buildables.Peasant());
+                            p.Build(new Buildables.Peasant());
+                            Debug.Log(v.x + "|" + v.y + "|" + v.z);
+                            Debug.Log(advancedTiles[v].GetBuildable().GetType().Name);
+                        }
+                    }
+                }
             }
         }
         NextPlayer();
     }
     void Update()
     {
+        if (lockInput)
+            return;
         if (Input.GetKeyDown(KeyCode.Q))
         {
             StartCoroutine(ShowCells());
@@ -392,7 +417,6 @@ public class MapController : MonoBehaviour
             if (f < r)
                 f = r;
         }
-        Debug.Log(f);
         return f;
     }
 
@@ -546,7 +570,8 @@ public class MapController : MonoBehaviour
         }
     }
 
-    private void NextPlayer()
+    bool lockInput = false;
+    public void NextPlayer()
     {   
         Index++;
 
@@ -555,8 +580,21 @@ public class MapController : MonoBehaviour
             Index = 0;
         }
         playing = players[Index];
+
         playing.NexTurn();
         info.ChangePlayer(playing);
+
+        if (playing.myBrains != null)
+        {
+            lockInput = true;
+            Debug.Log("LOCK" + lockInput);
+            playing.myBrains.PlayTurn();
+        }
+        else
+        {
+            lockInput = false;
+            Debug.Log("LOCK" + lockInput);
+        }   
     }
     private void LinkCellToInfo()
     {
@@ -578,7 +616,6 @@ public class MapController : MonoBehaviour
             GameObject tile = Instantiate(mainTile, map.CellToWorld(ToVectorInt(vec)), transform.rotation);
             advancedTiles.Add(vec, tile.GetComponent<AdvancedTile>());
             advancedTiles[vec].SetTilePos(ToVectorInt(vec));
-            Debug.Log(vec.x + "|" + vec.y);
         });
         map.SetColor(ToVectorInt(availablePlaces[0]), Color.blue);
         map.SetColor(ToVectorInt(availablePlaces[availablePlaces.Count - 1]), Color.red);
@@ -625,13 +662,24 @@ public class MapController : MonoBehaviour
         map.SetColor(v, c);
     }
 
-    private Vector3Int ToVectorInt(Vector3 v)
+    public Vector3Int ToVectorInt(Vector3 v)
     {
         return new Vector3Int((int)v.x, (int)v.y, (int)v.z);
     }
-    private Vector3 ToVector(Vector3Int v)
+    public Vector3 ToVector(Vector3Int v)
     {
         return new Vector3Int(v.x, v.y, v.z);
+    }
+    public Dictionary<Vector3,AdvancedTile> getAdvancedTiles() { return advancedTiles; }
+    public bool IsAdjscente(Vector3Int v)
+    {
+        coordinate = v;
+        return IsAdjscente();
+    }
+    public int GetProtectionLevel(Vector3Int v)
+    {
+        coordinate = v;
+        return GetProtectionLevel();
     }
 
 }
