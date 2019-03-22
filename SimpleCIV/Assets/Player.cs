@@ -45,6 +45,7 @@ public class Player
     }
     public bool Build(Buildables b)
     {
+        Debug.Log(b.GetType().Name);
         if (b is Buildables.Farm && money >= b.GetCost())
         {
             farms += 1;
@@ -66,6 +67,7 @@ public class Player
         if (b is Buildables.Peasant && money >= b.GetCost())
             if (farmsUsed < farms)
             {
+                Debug.Log("FARMUSED");
                 farmsUsed += 1;
                 money -= b.GetCost();
                 return true;
@@ -73,6 +75,7 @@ public class Player
         if (b is Buildables.Knight && money >= b.GetCost())
             if (villagesUsed < villages)
             {
+                Debug.Log("VillageUsed");
                 villagesUsed += 1;
                 money -= b.GetCost();
                 return true;
@@ -80,6 +83,7 @@ public class Player
         if (b is Buildables.Duke)
             if (castlesUsed < castles && money >= b.GetCost())
             {
+                Debug.Log("CastleUsed");
                 castlesUsed += 1;
                 money -= b.GetCost();
                 return true;
@@ -88,7 +92,6 @@ public class Player
     }
     public bool RemoveBuild(Buildables b)
     {
-        Debug.Log("BUILD" + b.GetType().Name);
         if (b is Buildables.Farm)
         {
             farms -= 1;
@@ -134,11 +137,20 @@ public class Player
     }
     public void NexTurn()
     {
-        Debug.Log("TILES"+nome);
-        Debug.Log(tilesOwned.Count);
         tilesOwned.ForEach(tile => { if(tile.GetBuildable().isMovable())tile.GetBuildable().moved = false;});
         DoIncome();
         money += income;
+        if (money < 0)
+        {
+            Debug.Log("LOW MONEY");
+            money = 0;
+            for(int i = tilesOwned.Count - 1; i >= 0; i--)
+            {
+                AdvancedTile t = tilesOwned[i];
+                if (t.GetBuildable().isMovable())
+                    t.KillUnit();
+            }
+        }
     }
     public bool HasTile(AdvancedTile tile)
     {

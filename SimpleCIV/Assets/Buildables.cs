@@ -76,7 +76,7 @@ public class Buildables
     {
         public new static int cost = 20;
         public new static int level = 2;
-        public new static int income = 5;
+        public new static int income = 6;
         public new static Sprite img = Resources.Load<Sprite>("Sprite/farm");
         public new static bool movable = false;
 
@@ -122,7 +122,7 @@ public class Buildables
     {
         public new static int cost = 50;
         public new static int level = 4;
-        public new static int income = 10;
+        public new static int income = 12;
         public new static Sprite img = Resources.Load<Sprite>("Sprite/City");
         public new static bool movable = false;
 
@@ -146,7 +146,7 @@ public class Buildables
     {
         public new static int cost = 100;
         public new static int level = 5;
-        public new static int upkeep = 50;
+        public new static int upkeep = 40;
         public new static Sprite img = Resources.Load<Sprite>("Sprite/Duke");
         public new static bool movable = true;
         public new bool moved = false;
@@ -169,9 +169,9 @@ public class Buildables
     }
     public class Castle: Buildables
     {
-        public new static int cost = 200;
+        public new static int cost = 100;
         public new static int level = 4;
-        public new static int upkeep = 100;
+        public new static int upkeep = 40;
         public new static Sprite img = Resources.Load<Sprite>("Sprite/castle");
         public new static bool movable = false;
 

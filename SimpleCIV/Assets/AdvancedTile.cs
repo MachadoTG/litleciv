@@ -29,6 +29,7 @@ public class AdvancedTile : MonoBehaviour
         build = b.Clone();
         build.moved = b.moved;
         ChangeSprite(build.GetSprite());
+ 
     }
     public void ChangeSprite(Sprite s)
     {
@@ -49,12 +50,6 @@ public class AdvancedTile : MonoBehaviour
     public Sprite GetSprite() { return img.sprite; }
     public void UnitMoveTo(AdvancedTile t)
     {
-        Debug.Log(owner.nome);
-        if (t.owner != null)
-            Debug.Log(t.owner.nome);
-        if (owner != t.owner)
-            t.ChangeOwner(owner);
-        Debug.Log(temp.GetType());
         t.Build(temp);
     }
     public void UnitMoving()
@@ -72,7 +67,9 @@ public class AdvancedTile : MonoBehaviour
         if (owner != null)
             if (owner.HasTile(this))
                 owner.RemoveAdvancedTile(this);
+
         owner = p;
+
         if (!owner.HasTile(this))
             owner.AddAdvancedTile(this);
         map.ChangeTileColor(tilePos, p.color);
@@ -80,4 +77,10 @@ public class AdvancedTile : MonoBehaviour
     public Player GetPlayer() { return owner; }
     public Buildables GetBuildable() { return build; }
     public void SetTilePos(Vector3Int t) { tilePos = t; }
+    public void KillUnit()
+    {
+        owner.RemoveBuild(build);
+        build = new Buildables.Empty();
+        ChangeSprite(build.GetSprite());
+    }
 }

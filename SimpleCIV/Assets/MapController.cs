@@ -32,7 +32,6 @@ public class MapController : MonoBehaviour
     private int Index = -1;
 
     private Buildables build;
-
     void Start()
     {
         map = GetComponentInChildren<Tilemap>();
@@ -54,27 +53,6 @@ public class MapController : MonoBehaviour
                 advancedTiles[v].ChangeOwner(p);
                 advancedTiles[v].Build(new Buildables.Farm());
                 p.Build(new Buildables.Farm());
-                Debug.Log(v.x + "|" + v.y + "|" + v.z);
-                Debug.Log(advancedTiles[v].GetBuildable().GetType().Name);
-            }
-            if(p.myBrains != null)
-            {
-                v = ToVectorInt(availablePlaces[Random.Range(0, availablePlaces.Count-1)]);
-                while (p.tilesOwned.Count != 2) 
-                {
-                    v = ToVectorInt(availablePlaces[Random.Range(0, availablePlaces.Count - 1)]);
-                    if (advancedTiles[v].GetPlayer() == null)
-                    {
-                        if (IsAdjscente(v))
-                        {
-                            advancedTiles[v].ChangeOwner(p);
-                            advancedTiles[v].Build(new Buildables.Peasant());
-                            p.Build(new Buildables.Peasant());
-                            Debug.Log(v.x + "|" + v.y + "|" + v.z);
-                            Debug.Log(advancedTiles[v].GetBuildable().GetType().Name);
-                        }
-                    }
-                }
             }
         }
         NextPlayer();
@@ -157,14 +135,19 @@ public class MapController : MonoBehaviour
     }
     private void MoveUnit()
     {
+        if (building || !movingUnit)
+            return;
         AdvancedTile tile = advancedTiles[coordinate];
         if (tile.GetPlayer() == playing)
         {
             if (tile.GetBuildable() is Buildables.Empty)
             {
+                Debug.Log("Move");
                 lastTile.UnitMoveTo(tile);
+                lastTile = null;
                 mouse.gameObject.SetActive(false);
                 movingUnit = false;
+                Debug.Log(tile.GetBuildable().GetType().Name);
                 return;
             }
             else
@@ -173,20 +156,20 @@ public class MapController : MonoBehaviour
                 return;
             }
         }
-
         if (IsAdjscente())
         {
             if (GetProtectionLevel() < build.GetDefenseLeve())
             {
                 if (tile.GetBuildable().GetDefenseLeve() < build.GetDefenseLeve())
                 {
+                    Debug.Log("Agressive Move");
+                    Debug.Log(build.GetType().Name);
                     tile.ChangeOwner(playing);
+                    tile.Build(build);
                     tile.GetBuildable().moved = true;
-
-                    lastTile.UnitMoveTo(tile);
-
                     mouse.gameObject.SetActive(false);
                     movingUnit = false;
+                    Debug.Log(tile.GetBuildable().GetType().Name);
                     return;
                 }
                 else
@@ -423,7 +406,7 @@ public class MapController : MonoBehaviour
     private bool building = false;
     private void Build()
     {
-        if (!building)
+        if (!building || movingUnit)
             return;
         AdvancedTile tile = advancedTiles[coordinate];
         if (tile.GetPlayer() == playing)
@@ -434,7 +417,9 @@ public class MapController : MonoBehaviour
                 {
                     if (playing.Build(build))
                     {
+                        Debug.Log("Build");
                         tile.Build(build);
+                        Debug.Log(tile.GetBuildable().GetType().Name);
                         if (!Input.GetKey(KeyCode.LeftShift))
                         {
                             mouse.gameObject.SetActive(false);
@@ -472,9 +457,11 @@ public class MapController : MonoBehaviour
                         {
                             if (playing.Build(build))
                             {
-                                build.moved = true;
-                                tile.Build(build);
+                                Debug.Log("Agressive Build");
                                 tile.ChangeOwner(playing);
+                                tile.Build(build);
+                                tile.GetBuildable().moved = true;
+                                Debug.Log(tile.GetBuildable().GetType().Name);
                                 if (!Input.GetKey(KeyCode.LeftShift))
                                 {
                                     mouse.gameObject.SetActive(false);
@@ -526,7 +513,8 @@ public class MapController : MonoBehaviour
     {
         Vector3 mouseWorldPos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
         coordinate = map.WorldToCell(mouseWorldPos);
-        SelectTile();
+        if (map.HasTile(coordinate))
+            SelectTile();
     }
     private void SelectTile()
     {
@@ -580,20 +568,19 @@ public class MapController : MonoBehaviour
             Index = 0;
         }
         playing = players[Index];
-
+        Debug.Log(playing.nome);
         playing.NexTurn();
         info.ChangePlayer(playing);
 
         if (playing.myBrains != null)
         {
             lockInput = true;
-            Debug.Log("LOCK" + lockInput);
             playing.myBrains.PlayTurn();
+            new WaitForSeconds(2f);
         }
         else
         {
             lockInput = false;
-            Debug.Log("LOCK" + lockInput);
         }   
     }
     private void LinkCellToInfo()

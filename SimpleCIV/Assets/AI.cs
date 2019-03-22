@@ -35,33 +35,74 @@ public class AI
             AdvancedTile tile = owned[i];
             if (tile.GetBuildable().isMovable())
                 AtackRandom(tile);
-            BuildBestUnit(new List<AdvancedTile>(owned));
-            BuildBestStructure(new List<AdvancedTile>(owned));
+
+            if (mySelf.castles > mySelf.castlesUsed)
+                BuildSpecific(new List<AdvancedTile>(owned), new Buildables.Duke());
+            if (mySelf.villages > mySelf.villagesUsed)
+                BuildSpecific(new List<AdvancedTile>(owned), new Buildables.Knight());
+            if (mySelf.farms > mySelf.farmsUsed)
+                BuildSpecific(new List<AdvancedTile>(owned), new Buildables.Peasant());
+
+            if ((mySelf.tilesOwned.Count / 10) > mySelf.castles)
+                BuildSpecific(new List<AdvancedTile>(owned), new Buildables.Castle());
+            if ((int)(mySelf.tilesOwned.Count / 4) > mySelf.villages)
+                BuildSpecific(new List<AdvancedTile>(owned), new Buildables.Village());
+            if ((int)(mySelf.tilesOwned.Count / 4) > mySelf.farms)
+                BuildSpecific(new List<AdvancedTile>(owned), new Buildables.Farm());
         }
+
         map.NextPlayer();
     }
-    private void BuildBestUnit(List<AdvancedTile> owned)
+    private void BuildSpecific(List<AdvancedTile> owned, Buildables b)
     {
         while (owned.Count != 0)
         {
             int index = Random.Range(0, owned.Count - 1);
             AdvancedTile tile = owned[index];
             owned.Remove(tile);
-            if (tile.GetBuildable().isMovable())
-                continue;
             if (!(tile.GetBuildable() is Buildables.Empty))
-                continue;
-            if (mySelf.money >= Buildables.Knight.cost)
             {
-                if (mySelf.Build(new Buildables.Knight()))
-                    tile.Build(new Buildables.Knight());
+                if (b.isMovable())
+                    if (BuildAgressive(tile, b))
+                        return;
             }
-            if (mySelf.money >= Buildables.Peasant.cost)
+            else
+            if (mySelf.money >= b.GetCost())
             {
-                if (mySelf.Build(new Buildables.Peasant()))
-                    tile.Build(new Buildables.Peasant());
+                if (mySelf.Build(b))
+                {
+                    Debug.Log("build");
+                    tile.Build(b);
+                    new WaitForSeconds(1f);
+                    return;
+                }
             }
         }
+    }
+    private bool BuildAgressive(AdvancedTile t, Buildables b)
+    {
+        List<AdvancedTile> adjacent = GetAdjacentTiles(map.ToVectorInt(reverseDic[t]),mySelf);
+        while (adjacent.Count != 0)
+        {
+            int index = Random.Range(0, adjacent.Count - 1);
+            AdvancedTile tile = adjacent[index];
+            adjacent.Remove(tile);
+            if (!(tile.GetBuildable() is Buildables.Empty))
+                continue;
+            if (mySelf.money >= b.GetCost())
+            {
+                if (mySelf.Build(b))
+                {
+                    Debug.Log("Agressive");
+                    tile.ChangeOwner(mySelf);
+                    tile.Build(b);
+                    tile.GetBuildable().moved = true;
+                    new WaitForSeconds(1f);
+                    return true;
+                }
+            }
+        }
+        return false;
     }
     private void AtackRandom(AdvancedTile unit)
     {
@@ -85,38 +126,16 @@ public class AI
                             if (map.GetProtectionLevel(map.ToVectorInt(reverseDic[t])) < unit.GetBuildable().GetDefenseLeve())
                                 if (t.GetPlayer() != mySelf)
                                 {
-                                    t.Build(unit.GetBuildable());
+                                    Debug.Log("Atk");
                                     t.ChangeOwner(mySelf);
+                                    t.Build(unit.GetBuildable());
                                     t.GetBuildable().moved = true;
                                     unit.Build(new Buildables.Empty());
+                                    new WaitForSeconds(1f);
                                     return;
                                 }
                     }
                 }
-            }
-        }
-    }
-    private void BuildBestStructure(List<AdvancedTile> owned)
-    {
-        while (owned.Count != 0)
-        {
-            int index = Random.Range(0, owned.Count - 1);
-            AdvancedTile tile = owned[index];
-            owned.Remove(tile);
-
-            if (tile.GetBuildable().isMovable())
-                continue;
-            if (!(tile.GetBuildable() is Buildables.Empty))
-                continue;
-            if (mySelf.money >= Buildables.Village.cost)
-            {
-                if (mySelf.Build(new Buildables.Village()))
-                    tile.Build(new Buildables.Village());
-            }
-            if (mySelf.money >= Buildables.Farm.cost)
-            {
-                if (mySelf.Build(new Buildables.Farm()))
-                    tile.Build(new Buildables.Farm());
             }
         }
     }
