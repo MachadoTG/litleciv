@@ -23,7 +23,6 @@ public class AdvancedTile : MonoBehaviour
         map = GameObject.FindObjectOfType<MapController>();
         build = new Buildables.Empty();
     }
-
     public void Build(Buildables b)
     {
         build = b.Clone();

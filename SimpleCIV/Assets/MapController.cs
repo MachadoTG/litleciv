@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.Tilemaps;
 using UnityEngine.UI;
 using Random = UnityEngine.Random;
@@ -32,31 +33,54 @@ public class MapController : MonoBehaviour
     private int Index = -1;
 
     private Buildables build;
-    void Start()
+
+    private NewGame startInfo;
+    void Awake()
     {
         map = GetComponentInChildren<Tilemap>();
         advancedTiles = new Dictionary<Vector3, AdvancedTile>();
         players = new List<Player>();
 
+        startInfo = GameObject.FindObjectOfType<NewGame>();
+
         LinkCellToInfo();
 
-        players.Add(new Player("BLUE", 30, Color.blue,false));
-        players.Add(new Player("RED", 30, Color.red,true));
-        players.Add(new Player("CYAN", 30, Color.cyan,true));
-        players.Add(new Player("YELLOW", 30, Color.yellow,true));
-        players.Add(new Player("MAGENTA", 30, Color.magenta,true));
+        PreparePlayers();
+       
+    }
+
+    private void PreparePlayers()
+    {
+        players =  new List<Player>(startInfo.players);
+        int tilesP = (int)advancedTiles.Count / players.Count;
+        int startTiles = startInfo.startTiles;
+
+        startInfo.gameObject.SetActive(false);
+
         foreach (Player p in players)
         {
-            Vector3Int v = ToVectorInt(availablePlaces[Random.Range(0, availablePlaces.Count-1)]);
-            if (advancedTiles[v].GetPlayer() == null)
+            while (p.tilesOwned.Count != startTiles && p.tilesOwned.Count != tilesP)
             {
-                advancedTiles[v].ChangeOwner(p);
-                advancedTiles[v].Build(new Buildables.Farm());
-                p.Build(new Buildables.Farm());
+                Vector3Int v = ToVectorInt(availablePlaces[Random.Range(0, availablePlaces.Count - 1)]);
+                if (advancedTiles[v].GetPlayer() == null && p.tilesOwned.Count<1)
+                {
+                    advancedTiles[v].ChangeOwner(p);
+                    advancedTiles[v].Build(new Buildables.Farm());
+                    p.Build(new Buildables.Farm());
+                }
+                else
+                {
+                    if(advancedTiles[v].GetPlayer() == null)
+                    {
+                        advancedTiles[v].ChangeOwner(p);
+                    }
+                }
+
             }
         }
         NextPlayer();
     }
+
     void Update()
     {
         if (lockInput)
@@ -167,6 +191,7 @@ public class MapController : MonoBehaviour
                     tile.ChangeOwner(playing);
                     tile.Build(build);
                     tile.GetBuildable().moved = true;
+                    lastTile.Build(new Buildables.Empty());
                     mouse.gameObject.SetActive(false);
                     movingUnit = false;
                     Debug.Log(tile.GetBuildable().GetType().Name);
@@ -668,5 +693,8 @@ public class MapController : MonoBehaviour
         coordinate = v;
         return GetProtectionLevel();
     }
-
+    public void QuitGame()
+    {
+        SceneManager.LoadScene(0);
+    }
 }

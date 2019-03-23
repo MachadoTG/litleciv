@@ -20,6 +20,7 @@ public class Player
     public int castlesUsed;
 
     public List<AdvancedTile> tilesOwned;
+    public List<AdvancedTile> units;
 
     public AI myBrains;
 
@@ -27,12 +28,13 @@ public class Player
     {
         if (AI)
         {
-            myBrains = new AI(GameObject.FindObjectOfType<MapController>(), this, 0);
+            myBrains = new AI(this, 0);
         }
         nome = s;
         color = c;
         money = f;
         tilesOwned = new List<AdvancedTile>();
+        units = new List<AdvancedTile>();
     }
 
     public void DoIncome()
@@ -45,7 +47,9 @@ public class Player
     }
     public bool Build(Buildables b)
     {
+        Debug.Log(nome);
         Debug.Log(b.GetType().Name);
+        Debug.Log(tilesOwned.Count);
         if (b is Buildables.Farm && money >= b.GetCost())
         {
             farms += 1;
@@ -137,7 +141,14 @@ public class Player
     }
     public void NexTurn()
     {
-        tilesOwned.ForEach(tile => { if(tile.GetBuildable().isMovable())tile.GetBuildable().moved = false;});
+        units.Clear();
+        tilesOwned.ForEach(tile => {
+            if (tile.GetBuildable().isMovable())
+            {
+                tile.GetBuildable().moved = false;
+                units.Add(tile);
+            }
+        });
         DoIncome();
         money += income;
         if (money < 0)
@@ -150,6 +161,7 @@ public class Player
                 if (t.GetBuildable().isMovable())
                     t.KillUnit();
             }
+            units.Clear();
         }
     }
     public bool HasTile(AdvancedTile tile)

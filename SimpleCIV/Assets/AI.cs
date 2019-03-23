@@ -13,42 +13,49 @@ public class AI
     private Dictionary<Vector3, AdvancedTile> advancedTiles;
     private Dictionary<AdvancedTile, Vector3> reverseDic;
 
-    public AI(MapController map, Player p, int Agression)
+    public AI(Player p, int Agression)
     {
         reverseDic = new Dictionary<AdvancedTile, Vector3>();
-
         this.Agression = Agression;
-        this.map = map;
         mySelf = p;
-        advancedTiles = map.getAdvancedTiles();
-
-        foreach (var v in advancedTiles)
-        {
-            reverseDic.Add(v.Value, v.Key);
-        }
     }
     public void PlayTurn()
     {
-        List<AdvancedTile> owned = new List<AdvancedTile>(mySelf.tilesOwned);
-        for (int i = owned.Count - 1; i >= 0; i--)
+        if (map == null)
         {
-            AdvancedTile tile = owned[i];
+            map = GameObject.FindObjectOfType<MapController>();
+            advancedTiles = map.getAdvancedTiles();
+
+            foreach (var v in advancedTiles)
+            {
+                reverseDic.Add(v.Value, v.Key);
+            }
+        }
+
+        List<AdvancedTile> owned = new List<AdvancedTile>(mySelf.tilesOwned);
+        for (int i = owned.Count; i >= 0; i--)
+        {
+            if ((mySelf.tilesOwned.Count / 10) > mySelf.castles && mySelf.money > Buildables.Castle.cost)
+                BuildSpecific(new List<AdvancedTile>(owned), new Buildables.Castle());
+            if ((int)(mySelf.tilesOwned.Count / 5) > mySelf.villages && mySelf.money > Buildables.Village.cost)
+                BuildSpecific(new List<AdvancedTile>(owned), new Buildables.Village());
+            if ((int)(mySelf.tilesOwned.Count / 5) > mySelf.farms && mySelf.money > Buildables.Farm.cost)
+                BuildSpecific(new List<AdvancedTile>(owned), new Buildables.Farm());
+
+            if (mySelf.castles > mySelf.castlesUsed && mySelf.money > Buildables.Duke.cost)
+                BuildSpecific(new List<AdvancedTile>(owned), new Buildables.Duke());
+            if (mySelf.villages > mySelf.villagesUsed && mySelf.money > Buildables.Knight.cost)
+                BuildSpecific(new List<AdvancedTile>(owned), new Buildables.Knight());
+            if (mySelf.farms > mySelf.farmsUsed && mySelf.money > Buildables.Peasant.cost)
+                BuildSpecific(new List<AdvancedTile>(owned), new Buildables.Peasant());
+        }
+        List<AdvancedTile> units = new List<AdvancedTile>(mySelf.units);
+        for (int i = units.Count - 1; i >= 0; i--)
+        {
+            AdvancedTile tile = units[i];
             if (tile.GetBuildable().isMovable())
                 AtackRandom(tile);
 
-            if (mySelf.castles > mySelf.castlesUsed)
-                BuildSpecific(new List<AdvancedTile>(owned), new Buildables.Duke());
-            if (mySelf.villages > mySelf.villagesUsed)
-                BuildSpecific(new List<AdvancedTile>(owned), new Buildables.Knight());
-            if (mySelf.farms > mySelf.farmsUsed)
-                BuildSpecific(new List<AdvancedTile>(owned), new Buildables.Peasant());
-
-            if ((mySelf.tilesOwned.Count / 10) > mySelf.castles)
-                BuildSpecific(new List<AdvancedTile>(owned), new Buildables.Castle());
-            if ((int)(mySelf.tilesOwned.Count / 4) > mySelf.villages)
-                BuildSpecific(new List<AdvancedTile>(owned), new Buildables.Village());
-            if ((int)(mySelf.tilesOwned.Count / 4) > mySelf.farms)
-                BuildSpecific(new List<AdvancedTile>(owned), new Buildables.Farm());
         }
 
         map.NextPlayer();

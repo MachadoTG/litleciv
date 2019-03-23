@@ -2,6 +2,7 @@ Win64
 PlayerPath?
 E:/gitKraken repo/simpleCIV/Game/SimpleCIV.exe
 SceneListBegin?
+Assets/Scenes/Main Menu.unity
 Assets/Scenes/SampleScene.unity
 SceneListEnd?
 984dcc0ba3707b7691fbdca8ff508d28 Unity.TextMeshPro.dll:TMPro.TMP_SelectionCaret
@@ -161,3 +162,5 @@ d791aa6007fa3640be1164ea75bb087d Unity.TextMeshPro.dll:TMPro.TMP_StyleSheet
 c6666661329916e218bee7f5e79e60f5 Unity.TextMeshPro.dll:TMPro.TextMeshPro
 3165968ba45c74472d279ba04455fccb Unity.TextMeshPro.dll:TMPro.TMP_ColorGradient
 8649814970b42d345b89944b862453cc Unity.TextMeshPro.dll:TMPro.TMP_SubMesh
+a4477b036d27f7a2d08f0df344a00899 Assembly-CSharp.dll:.MainMenu
+f8f4d862b40f85175eb13858a629a63b Assembly-CSharp.dll:.NewGame
