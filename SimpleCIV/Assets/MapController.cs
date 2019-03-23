@@ -52,17 +52,55 @@ public class MapController : MonoBehaviour
     private void PreparePlayers()
     {
         players =  new List<Player>(startInfo.players);
+
         int tilesP = (int)advancedTiles.Count / players.Count;
         int startTiles = startInfo.startTiles;
 
         startInfo.gameObject.SetActive(false);
 
+        if (startTiles > 100)
+        {
+            DistributeEqual();
+        }
+        else
+        {
+            Distribute(startTiles,tilesP);
+        }  
+        NextPlayer();
+    }
+    private void DistributeEqual()
+    {
+        List<AdvancedTile> tosplit = new List<AdvancedTile>(advancedTiles.Values);
+        while (tosplit.Count != 0)
+        {
+            foreach(Player p in players)
+            {
+                if (tosplit.Count < 1)
+                    break;
+                AdvancedTile t = tosplit[Random.Range(0, tosplit.Count - 1)];
+                if(p.tilesOwned.Count < 1)
+                {
+                    t.ChangeOwner(p);
+                    t.Build(new Buildables.Farm());
+                    p.Build(new Buildables.Farm());
+                    tosplit.Remove(t);
+                }
+                else
+                {
+                    t.ChangeOwner(p);
+                    tosplit.Remove(t);
+                }
+            }
+        }
+    }
+    private void Distribute(int startTiles,int tilesP)
+    {
         foreach (Player p in players)
         {
             while (p.tilesOwned.Count != startTiles && p.tilesOwned.Count != tilesP)
             {
                 Vector3Int v = ToVectorInt(availablePlaces[Random.Range(0, availablePlaces.Count - 1)]);
-                if (advancedTiles[v].GetPlayer() == null && p.tilesOwned.Count<1)
+                if (advancedTiles[v].GetPlayer() == null && p.tilesOwned.Count < 1)
                 {
                     advancedTiles[v].ChangeOwner(p);
                     advancedTiles[v].Build(new Buildables.Farm());
@@ -70,7 +108,7 @@ public class MapController : MonoBehaviour
                 }
                 else
                 {
-                    if(advancedTiles[v].GetPlayer() == null)
+                    if (advancedTiles[v].GetPlayer() == null)
                     {
                         advancedTiles[v].ChangeOwner(p);
                     }
@@ -78,9 +116,7 @@ public class MapController : MonoBehaviour
 
             }
         }
-        NextPlayer();
     }
-
     void Update()
     {
         if (lockInput)
@@ -591,10 +627,11 @@ public class MapController : MonoBehaviour
         if (Index + 1 > players.Count)
         {
             Index = 0;
+            foreach (Player p in players)
+                p.NexTurn();
         }
         playing = players[Index];
         Debug.Log(playing.nome);
-        playing.NexTurn();
         info.ChangePlayer(playing);
 
         if (playing.myBrains != null)

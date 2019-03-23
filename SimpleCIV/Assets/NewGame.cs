@@ -23,12 +23,12 @@ public class NewGame : MonoBehaviour
     {
         DontDestroyOnLoad(this);
         players = new List<Player>();
-        players.Add(new Player("HUMAN", startMoney, Color.blue, false));
     }
 
     public void StartGame()
     {
-        foreach(Toggle t in GetComponentsInChildren<Toggle>())
+        players.Add(new Player("HUMAN", startMoney, Color.blue, false));
+        foreach (Toggle t in GetComponentsInChildren<Toggle>())
         {
             if (t.isOn)
             {
@@ -51,6 +51,9 @@ public class NewGame : MonoBehaviour
     public void TilesChange()
     {
         startTiles = (int)tiles.value;
+        if (startTiles > 100)
+            tilesT.text = "DIVIDE THE MAP AMONG THE PLAYERS";
+        else
         tilesT.text = startTiles.ToString();
     }
     private Color GetColor(string s)
