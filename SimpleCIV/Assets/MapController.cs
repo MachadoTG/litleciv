@@ -15,7 +15,11 @@ public class MapController : MonoBehaviour
 
     public PlayerInfo info;
 
+    public Image icon;
+
     public SpriteRenderer mouse;
+
+    private Sprite sprite;
 
     public List<Player> players;
     public Player playing;
@@ -46,12 +50,13 @@ public class MapController : MonoBehaviour
         LinkCellToInfo();
 
         PreparePlayers();
-       
     }
 
     private void PreparePlayers()
     {
         players =  new List<Player>(startInfo.players);
+
+        AIPLAYSPEED = startInfo.AIPLAYSPEED;
 
         int tilesP = (int)advancedTiles.Count / players.Count;
         int startTiles = startInfo.startTiles;
@@ -130,6 +135,7 @@ public class MapController : MonoBehaviour
             FindClickedTile();
             IsAdjscente();
         }
+
         if((Input.GetMouseButtonDown(0))&&(movingUnit || building))
         {
             FindClickedTile();
@@ -138,6 +144,7 @@ public class MapController : MonoBehaviour
             if (movingUnit)
                 MoveUnit();
         }
+
         else
         {
             if (Input.GetMouseButtonDown(0))
@@ -145,10 +152,10 @@ public class MapController : MonoBehaviour
                 FindClickedTile();
             }
         }
-
+#if !UNITY_MOBILE
         if (Input.GetMouseButtonDown(1))
         {
-            mouse.gameObject.SetActive(false);
+            DisableMouse();
             if (building)
                 building = false;
             if (movingUnit)
@@ -158,15 +165,31 @@ public class MapController : MonoBehaviour
                 lastTile = null;
             }
         }
-
+#endif
         if (Input.GetKeyDown(KeyCode.Space))
         {
             NextPlayer();
         }
         if (mouse.gameObject.activeSelf)
         {
+#if UNITY_EDITOR
             Vector3 v = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-            mouse.transform.position = new Vector3(v.x, v.y, -1); 
+            mouse.transform.position = new Vector3(v.x, v.y, -1);
+#endif
+        }
+
+    }
+
+    public void MobileRighCLick()
+    {
+        DisableMouse();
+        if (building)
+            building = false;
+        if (movingUnit)
+        {
+            movingUnit = false;
+            lastTile.CancelUnitMove();
+            lastTile = null;
         }
     }
 
@@ -202,10 +225,9 @@ public class MapController : MonoBehaviour
         {
             if (tile.GetBuildable() is Buildables.Empty)
             {
-                Debug.Log("Move");
                 lastTile.UnitMoveTo(tile);
                 lastTile = null;
-                mouse.gameObject.SetActive(false);
+                DisableMouse();
                 movingUnit = false;
                 Debug.Log(tile.GetBuildable().GetType().Name);
                 return;
@@ -222,15 +244,12 @@ public class MapController : MonoBehaviour
             {
                 if (tile.GetBuildable().GetDefenseLeve() < build.GetDefenseLeve())
                 {
-                    Debug.Log("Agressive Move");
-                    Debug.Log(build.GetType().Name);
                     tile.ChangeOwner(playing);
                     tile.Build(build);
                     tile.GetBuildable().moved = true;
                     lastTile.Build(new Buildables.Empty());
-                    mouse.gameObject.SetActive(false);
+                    DisableMouse();
                     movingUnit = false;
-                    Debug.Log(tile.GetBuildable().GetType().Name);
                     return;
                 }
                 else
@@ -483,7 +502,7 @@ public class MapController : MonoBehaviour
                         Debug.Log(tile.GetBuildable().GetType().Name);
                         if (!Input.GetKey(KeyCode.LeftShift))
                         {
-                            mouse.gameObject.SetActive(false);
+                            DisableMouse();
                             building = false;
                         }
                         return;
@@ -525,7 +544,7 @@ public class MapController : MonoBehaviour
                                 Debug.Log(tile.GetBuildable().GetType().Name);
                                 if (!Input.GetKey(KeyCode.LeftShift))
                                 {
-                                    mouse.gameObject.SetActive(false);
+                                    DisableMouse();
                                     building = false;
                                 }
                                 return;
@@ -619,6 +638,8 @@ public class MapController : MonoBehaviour
         }
     }
 
+    public float AIPLAYSPEED;
+
     bool lockInput = false;
     public void NextPlayer()
     {   
@@ -627,18 +648,14 @@ public class MapController : MonoBehaviour
         if (Index + 1 > players.Count)
         {
             Index = 0;
-            foreach (Player p in players)
-                p.NexTurn();
         }
         playing = players[Index];
-        Debug.Log(playing.nome);
+        playing.NexTurn();
         info.ChangePlayer(playing);
-
         if (playing.myBrains != null)
         {
             lockInput = true;
             playing.myBrains.PlayTurn();
-            new WaitForSeconds(2f);
         }
         else
         {
@@ -673,13 +690,32 @@ public class MapController : MonoBehaviour
 
     public void ChangeMouseIcon(Buildables buildable , bool b)
     {
+#if UNITY_EDITOR
         if (!mouse.gameObject.activeSelf)
             mouse.gameObject.SetActive(true);
         build = buildable;
         mouse.sprite = buildable.GetSprite();
         building = b;
-    }
+        sprite = mouse.sprite;
 
+#else
+         if (!icon.gameObject.activeSelf)
+            icon.gameObject.SetActive(true);
+        build = buildable;
+        icon.sprite = buildable.GetSprite();
+        building = b;
+#endif
+    }
+    private void DisableMouse()
+    {
+#if UNITY_EDITOR
+        if (mouse.gameObject.activeSelf)
+            mouse.gameObject.SetActive(false);
+#else
+        if (icon.gameObject.activeSelf)
+            icon.gameObject.SetActive(false);
+#endif
+    }
     public void ClickPeasant()
     {
         ChangeMouseIcon(new Buildables.Peasant(),true);

@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class AI
+public class AI : MonoBehaviour
 {
     private Player mySelf;
 
@@ -10,17 +10,25 @@ public class AI
 
     private MapController map;
 
+    private float playSpeed = 0;
+
     private Dictionary<Vector3, AdvancedTile> advancedTiles;
     private Dictionary<AdvancedTile, Vector3> reverseDic;
 
-    public AI(Player p, int Agression)
+    public void SetUP(Player p , int Agression)
     {
         reverseDic = new Dictionary<AdvancedTile, Vector3>();
         this.Agression = Agression;
         mySelf = p;
+        playSpeed = GameObject.FindObjectOfType<NewGame>().AIPLAYSPEED;
     }
     public void PlayTurn()
     {
+        Coroutine c = StartCoroutine(Think());
+    }
+    IEnumerator Think()
+    {
+        new WaitForSeconds(1f);
         if (map == null)
         {
             map = GameObject.FindObjectOfType<MapController>();
@@ -33,31 +41,52 @@ public class AI
         }
 
         List<AdvancedTile> owned = new List<AdvancedTile>(mySelf.tilesOwned);
-        for (int i = owned.Count; i >= 0; i--)
+        for (int i = owned.Count - 1; i >= 0; i--)
         {
-            if ((mySelf.tilesOwned.Count / 10) > mySelf.castles && mySelf.money > Buildables.Castle.cost)
-                BuildSpecific(new List<AdvancedTile>(owned), new Buildables.Castle());
-            if ((int)(mySelf.tilesOwned.Count / 5) > mySelf.villages && mySelf.money > Buildables.Village.cost)
-                BuildSpecific(new List<AdvancedTile>(owned), new Buildables.Village());
-            if ((int)(mySelf.tilesOwned.Count / 5) > mySelf.farms && mySelf.money > Buildables.Farm.cost)
-                BuildSpecific(new List<AdvancedTile>(owned), new Buildables.Farm());
-
+            if (owned[i].GetBuildable() is Buildables.Empty)
+            {
+                if ((mySelf.tilesOwned.Count / 10) > mySelf.castles && mySelf.money > Buildables.Castle.cost)
+                {
+                    BuildSpecific(new List<AdvancedTile>(owned), new Buildables.Castle());
+                    yield return new WaitForSeconds(playSpeed);
+                }
+                if ((int)(mySelf.tilesOwned.Count / 5) > mySelf.villages && mySelf.money > Buildables.Village.cost)
+                {
+                    BuildSpecific(new List<AdvancedTile>(owned), new Buildables.Village());
+                    yield return new WaitForSeconds(playSpeed);
+                }
+                if ((int)(mySelf.tilesOwned.Count / 5) > mySelf.farms && mySelf.money > Buildables.Farm.cost)
+                {
+                    BuildSpecific(new List<AdvancedTile>(owned), new Buildables.Farm());
+                    yield return new WaitForSeconds(playSpeed);
+                }
+            }
             if (mySelf.castles > mySelf.castlesUsed && mySelf.money > Buildables.Duke.cost)
+            {
                 BuildSpecific(new List<AdvancedTile>(owned), new Buildables.Duke());
+                yield return new WaitForSeconds(playSpeed);
+            }
             if (mySelf.villages > mySelf.villagesUsed && mySelf.money > Buildables.Knight.cost)
+            {
                 BuildSpecific(new List<AdvancedTile>(owned), new Buildables.Knight());
+                yield return new WaitForSeconds(playSpeed);
+            }
             if (mySelf.farms > mySelf.farmsUsed && mySelf.money > Buildables.Peasant.cost)
+            {
                 BuildSpecific(new List<AdvancedTile>(owned), new Buildables.Peasant());
+                yield return new WaitForSeconds(playSpeed);
+            }
         }
         List<AdvancedTile> units = new List<AdvancedTile>(mySelf.units);
         for (int i = units.Count - 1; i >= 0; i--)
         {
             AdvancedTile tile = units[i];
             if (tile.GetBuildable().isMovable())
+            {
                 AtackRandom(tile);
-
+                yield return new WaitForSeconds(playSpeed);
+            }
         }
-
         map.NextPlayer();
     }
     private void BuildSpecific(List<AdvancedTile> owned, Buildables b)
@@ -66,6 +95,10 @@ public class AI
         {
             int index = Random.Range(0, owned.Count - 1);
             AdvancedTile tile = owned[index];
+
+            if (!b.isMovable() && !(tile.GetBuildable() is Buildables.Empty))
+                continue;
+
             owned.Remove(tile);
             if (!(tile.GetBuildable() is Buildables.Empty))
             {
@@ -78,9 +111,7 @@ public class AI
             {
                 if (mySelf.Build(b))
                 {
-                    Debug.Log("build");
                     tile.Build(b);
-                    new WaitForSeconds(1f);
                     return;
                 }
             }
@@ -100,11 +131,9 @@ public class AI
             {
                 if (mySelf.Build(b))
                 {
-                    Debug.Log("Agressive");
                     tile.ChangeOwner(mySelf);
                     tile.Build(b);
                     tile.GetBuildable().moved = true;
-                    new WaitForSeconds(1f);
                     return true;
                 }
             }
@@ -133,12 +162,10 @@ public class AI
                             if (map.GetProtectionLevel(map.ToVectorInt(reverseDic[t])) < unit.GetBuildable().GetDefenseLeve())
                                 if (t.GetPlayer() != mySelf)
                                 {
-                                    Debug.Log("Atk");
                                     t.ChangeOwner(mySelf);
                                     t.Build(unit.GetBuildable());
                                     t.GetBuildable().moved = true;
                                     unit.Build(new Buildables.Empty());
-                                    new WaitForSeconds(1f);
                                     return;
                                 }
                     }

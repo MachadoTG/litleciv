@@ -144,7 +144,7 @@ public class Buildables
     }
     public class Duke : Buildables
     {
-        public new static int cost = 40;
+        public new static int cost = 50;
         public new static int level = 5;
         public new static int upkeep = 40;
         public new static Sprite img = Resources.Load<Sprite>("Sprite/Duke");

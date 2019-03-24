@@ -1,8 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 
-public class Player
+public class Player :MonoBehaviour
 {
 
     public string nome;
@@ -24,11 +23,17 @@ public class Player
 
     public AI myBrains;
 
-    public Player(string s, float f, Color c, bool AI)
+    private GameObject aiPlace;
+
+    public void SetUP(string s, float f, Color c, bool Ai)
     {
-        if (AI)
+        if (Ai)
         {
-            myBrains = new AI(this, 0);
+            MapController map = MonoBehaviour.FindObjectOfType<MapController>();
+            aiPlace = new GameObject();
+            aiPlace.transform.parent = transform;
+            myBrains = aiPlace.AddComponent<AI>();
+            myBrains.SetUP(this, 0);
         }
         nome = s;
         color = c;
@@ -141,6 +146,14 @@ public class Player
     }
     public void NexTurn()
     {
+        List<AdvancedTile> newOwn = new List<AdvancedTile>();
+        foreach(AdvancedTile t in tilesOwned)
+        {
+            if (t.GetPlayer() == this)
+                newOwn.Add(t);
+        }
+        tilesOwned = new List<AdvancedTile>(newOwn);
+
         units.Clear();
         tilesOwned.ForEach(tile => {
             if (tile.GetBuildable().isMovable())

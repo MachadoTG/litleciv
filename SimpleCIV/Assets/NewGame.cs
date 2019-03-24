@@ -15,9 +15,13 @@ public class NewGame : MonoBehaviour
 
     public Slider money;
     public Slider tiles;
+    public Slider aiSpeed;
 
+    public Text aiSpeedT;
     public Text moneyT;
     public Text tilesT;
+
+    public float AIPLAYSPEED;
 
     private void Awake()
     {
@@ -27,14 +31,22 @@ public class NewGame : MonoBehaviour
 
     public void StartGame()
     {
-        players.Add(new Player("HUMAN", startMoney, Color.blue, false));
+        Player p = new GameObject().AddComponent<Player>();
+        p.SetUP("HUMAN", startMoney, Color.blue, false);
+        Debug.Log(p.myBrains != null ? "AI" : "HUMAN");
+        players.Add(p);
+        DontDestroyOnLoad(p);
         foreach (Toggle t in GetComponentsInChildren<Toggle>())
         {
             if (t.isOn)
             {
                 Dropdown d = t.transform.parent.GetComponentInChildren<Dropdown>();
                 Color c = GetColor(d.options[d.value].text);
-                players.Add(new Player(d.options[d.value].text, startMoney, c, true));
+                p = new GameObject().AddComponent<Player>();
+                p.SetUP(d.options[d.value].text, startMoney, c, true);
+                Debug.Log(p.myBrains != null ? "AI" : "HUMAN");
+                DontDestroyOnLoad(p);
+                players.Add(p);
             }
         }
         SceneManager.LoadScene(1);
@@ -48,13 +60,18 @@ public class NewGame : MonoBehaviour
         startMoney = (int)money.value;
         moneyT.text = startMoney.ToString();
     }
+    public void AiSpeedChange()
+    {
+        AIPLAYSPEED = aiSpeed.value;
+        aiSpeedT.text = AIPLAYSPEED.ToString();
+    }
     public void TilesChange()
     {
         startTiles = (int)tiles.value;
         if (startTiles > 100)
             tilesT.text = "DIVIDE THE MAP AMONG THE PLAYERS";
         else
-        tilesT.text = startTiles.ToString();
+        tilesT.text = AIPLAYSPEED.ToString("##.##");
     }
     private Color GetColor(string s)
     {
