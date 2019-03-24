@@ -63,7 +63,7 @@ public class NewGame : MonoBehaviour
     public void AiSpeedChange()
     {
         AIPLAYSPEED = aiSpeed.value;
-        aiSpeedT.text = AIPLAYSPEED.ToString();
+        aiSpeedT.text = AIPLAYSPEED.ToString("##.##");
     }
     public void TilesChange()
     {
@@ -71,7 +71,7 @@ public class NewGame : MonoBehaviour
         if (startTiles > 100)
             tilesT.text = "DIVIDE THE MAP AMONG THE PLAYERS";
         else
-        tilesT.text = AIPLAYSPEED.ToString("##.##");
+            tilesT.text = startTiles.ToString();
     }
     private Color GetColor(string s)
     {
