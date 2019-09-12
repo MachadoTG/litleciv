@@ -166,7 +166,7 @@ public class MapController : MonoBehaviour
             }
         }
 #endif
-        if (Input.GetKeyDown(KeyCode.Space))
+        if (Input.GetKey(KeyCode.Space))
         {
             NextPlayer();
         }
